@@ -1,6 +1,6 @@
 import math
 import random
-from enum import Enum
+from enum import IntEnum
 import numpy
 import names as random_names
 import typing
@@ -10,10 +10,12 @@ import plotly.express as px
 from pyvis.network import Network
 from collections.abc import Sequence
 
-class AgentPDBehaviour(Enum):
-    TFT =   1
-    ALLD =  2
-    RND =   3
+
+class AgentPDBehaviour(IntEnum):
+    TFT = 1
+    ALLD = 2
+    RND = 3
+
 
 class PDConfig:
     def __init__(
@@ -23,9 +25,15 @@ class PDConfig:
         self.max_history = max_history
 
 
-class PDAction(Enum):
-    Defect      = 0
-    Cooperate   = 1
+class PDAction(IntEnum):
+    Defect = 0
+    Cooperate = 1
+
+
+class PDGame:
+    def __init__(self):
+        pass
+
 
 class AgentModelConfig:
     def __init__(
@@ -76,8 +84,7 @@ class Agent:
             PD_behaviour: AgentPDBehaviour,
             experience: AgentExperience,
             tier: int = 0,
-            parent = None,
-            PD_history = None
+            parent = None
     ) -> None:
         self.index = index
         self.name = name
@@ -106,11 +113,9 @@ class AgentNetwork:
         self.weighted_agent_amounts = self.get_weighted_agent_amounts()
         if config.debug_mode:
             print(self.weighted_agent_amounts)
-            print(sum(self.weighted_agent_amounts))
+            # print(sum(self.weighted_agent_amounts))
         self.assign_parents()
         self.generate_random_trace()
-        # if config.debug_mode:
-        #     self.test_print_agents()
 
     def __getitem__(self, items) -> typing.Union[Agent, Sequence[Agent]]:
         return self.agents[items]
@@ -157,6 +162,10 @@ class AgentNetwork:
                 self.agents[i].parent.plot_x + self.config.children_x_margin
             )
             self.agents[i].plot_y = self.agents[i].parent.plot_y - self.config.children_y_margin
+
+    def reset_agents_experience(self) -> None:
+        for agent in self.agents[1:]:
+            agent.experience.new_information_grasp = 0
 
     def get_min_grasp(self) -> float:
         min_grasp = 1
@@ -339,7 +348,7 @@ class SimulationConfig:
         self.grasp_threshold = grasp_threshold
 
 
-class SimulationType(Enum):
+class SimulationType(IntEnum):
     GraspTransfer = 1
 
 
@@ -369,6 +378,10 @@ class Simulation:
             case AgentPDBehaviour.RND:
                 return list(PDAction)[random.randint(0, len(PDAction) - 1)]
             case _:
+                print(player.index)
+                print(id(player.PD_behaviour))
+                print(id(AgentPDBehaviour.ALLD))
+                print(player.PD_behaviour == AgentPDBehaviour.ALLD)
                 raise AttributeError('Unknown agent PD behaviour')
 
     def get_pd_score(self, first_action: PDAction, second_action: PDAction) -> list[int]:
