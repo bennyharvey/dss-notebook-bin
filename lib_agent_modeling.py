@@ -9,6 +9,7 @@ import plotly.graph_objects as go
 import plotly.express as px
 from pyvis.network import Network
 from collections.abc import Sequence
+import matplotlib.pyplot as plt
 
 
 class AgentPDBehaviour(IntEnum):
@@ -151,6 +152,12 @@ class AgentNetwork:
                 pointer += 1
             parent_agents = current_agents
             current_agents = []
+
+    def get_grasp_sum(self) -> int:
+        sum = 0
+        for agent in self.agents:
+            sum += agent.experience.new_information_grasp
+        return sum
 
     def generate_random_trace(self) -> None:
         for i in range(len(self.agents)):
@@ -354,6 +361,7 @@ class SimulationType(IntEnum):
 
 class Simulation:
     completed_in: int = 0
+    grasp_plot = []
     type: SimulationType | None = None
 
     def __init__(self, agent_network: AgentNetwork, config: SimulationConfig = SimulationConfig()):
@@ -399,7 +407,7 @@ class Simulation:
 
     def get_transfer_rate(self, pd_round_result: int) -> float:
         match pd_round_result:
-            case 6: return 1
+            case 6: return 0.9
             case 5: return 0.5
             case 2: return 0.1
 
@@ -409,6 +417,7 @@ class Simulation:
                 self.simulate_grasp_transfer()
             case _:
                 raise AttributeError('Unknown simulation type')
+        print(f'Simulation completed in {self.completed_in} iterations')
 
     def simulate_grasp_transfer(self):
         self.agent_network[0].experience.new_information_grasp = 1
@@ -428,11 +437,19 @@ class Simulation:
                                                                  transfer_rate / \
                                                                  self.agent_network.config.transfer_addition_rate
                 if agent.experience.new_information_grasp > 1: agent.experience.new_information_grasp = 1
-
             if self.agent_network.get_min_grasp() > self.config.grasp_threshold:
                 self.completed_in = i
                 break
+            self.grasp_plot.append(self.agent_network.get_grasp_sum())
 
+    def draw_grasp_plot(self):
+        # plt.title("Grasp gain")
+        # plt.xlabel("iteration")
+        # plt.ylabel("grasp sum")
+        # plt.grid()
+        # plt.plot(range(1, len(self.grasp_plot) + 1), self.grasp_plot)
+        fig = px.line(x=range(1, len(self.grasp_plot) + 1), y=self.grasp_plot, labels={'x':'iteration', 'y':'grasp sum'})
+        fig.show()
 
 def main():
     conf = AgentModelConfig()
