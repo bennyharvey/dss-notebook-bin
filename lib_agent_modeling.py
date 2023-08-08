@@ -1,6 +1,6 @@
 import math
 import random
-from enum import IntEnum
+from enum import IntEnum, auto
 import numpy
 import names as random_names
 import typing
@@ -13,9 +13,9 @@ import matplotlib.pyplot as plt
 
 
 class AgentPDBehaviour(IntEnum):
-    TFT = 1
-    ALLD = 2
-    RND = 3
+    TFT = auto()
+    ALLD = auto()
+    RND = auto()
 
 
 class PDConfig:
